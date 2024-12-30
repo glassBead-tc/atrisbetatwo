@@ -10,7 +10,7 @@ import {
   TrendingPlaylistsResponse,
   GetTrendingPlaylistsTimeEnum,
   SearchFullResponse,
-} from '../../../../types.js';
+} from '../../../../types/types.js';
 import { BASE_URL } from '../../../../constants/constants.js';
 import dotenv from 'dotenv';
 

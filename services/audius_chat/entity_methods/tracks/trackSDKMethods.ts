@@ -2,6 +2,7 @@
 
 import axios from 'axios';
 import {
+  TrackFull,
   TracksResponse,
   TrackCommentsResponse,
   StemsResponse,
@@ -16,7 +17,7 @@ import {
   GetNFTGatedTrackSignaturesRequest,
   GetTrendingUSDCPurchaseTracksTimeEnum,
   GetTrendingTracksRequest,
-} from '../../../../types.js';
+} from '../../../../types/types.js';
 
 export class TrackSDKMethods {
   private baseUrl: string;
@@ -28,11 +29,11 @@ export class TrackSDKMethods {
   }
 
   // Get Track by ID
-  public async getTrack(trackId: string): Promise<TracksResponse> {
+  public async getTrack(trackId: string): Promise<TrackFull> {
     const url = `${this.baseUrl}/tracks/${trackId}`;
 
     try {
-      const response = await axios.get<TracksResponse>(url, {
+      const response = await axios.get<TrackFull>(url, {
         params: {
           app_name: 'Atris',
         },
@@ -181,6 +182,17 @@ export class TrackSDKMethods {
       return response.data;
     } catch (error) {
       console.error('Error fetching remixes of track:', error);
+      throw error;
+    }
+  }
+
+  public async getTrackGenre(trackId: string): Promise<string> {
+    try {
+      const trackResponse = await this.getTrack(trackId);
+      const track = trackResponse;
+      return track.genre; // genre is a required field, no need for fallback
+    } catch (error) {
+      console.error('Error fetching track genre:', error);
       throw error;
     }
   }

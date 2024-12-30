@@ -13,7 +13,7 @@ import {
   FullGetSupporters,
   SearchFullResponse,
   GetFavoritesRequest,
-} from '../../../../types.js';
+} from '../../../../types/types.js';
 
 export class UserSDKMethods {
   private baseUrl: string;
