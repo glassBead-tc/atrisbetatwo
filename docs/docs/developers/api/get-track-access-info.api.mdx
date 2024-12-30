@@ -1,0 +1,227 @@
+---
+id: get-track-access-info
+title: 'Get Track Access Info'
+description:
+  'Gets the information necessary to access the track and what access the given user has.'
+sidebar_label: 'Get Track Access'
+hide_title: true
+hide_table_of_contents: true
+api: eJy1Vk1v2zAM/SuCThuQ1e2OuRXo0OW0Yeu2QxEEjM3EahzJleRkgeH/PlKyY6fJ0g9sp0Amxff4KJKppYelk+N76S2kKyenI5mhS60qvTJajuUteid8jkLphbFr4M9CY4rOgd0JbwSkfAg+IYgAnYltDn5oWaoNalE5tCIHdyFH0pRoQ7RJFmHEXbh9HS9NCI68SrCwRo+WSdZS04G8A85MZeSgmGQJPpdPmV+3ASc3ZLL4WCmLBOVthSPp0hzXIMe19LuSQzpvlV7KphntUZjtAOSxQrs7Qrmj5EJakxthFiHXcFzDiuKFM2Oj8/Ic6pQputJoh47tHy8v+ecQ63sVtKFAqdEetWcXKMtCpUHJ5MGxX32MY+YPmDKD0rLuXkWUDHzw6tW5l/PCpCtdredoyb/TgPidDxVrfQryMIebcJqje+aJ0EUoii+LUPYhv8xsdWGAy0LqIayf59b69dzmxhQIWjajPtwJK5m98gV/a9Nrpk2vyVEZX/A2CI3O4aBc7BdmMRS9D6uoyMtQhuO4gxuDWGILThTgvKhKKi4pRsGVm0UFZsvw6TjTpwC/ciSyxNMKbfyAOBWGnjOnm1IkEcPyO59jrqjtQXcVZSgGb5HpwWaKo7/giXw2W54rleYUW4z9QzH9oDl4Ik9DdoXD39QoGWazGGAWeU2jLF3x/7kwXeCz0uzR3y5OP3QHbfF2UQYPPo7Y1s6z/0Q7hO+zbm6RQ8M+NK5zwzN9iaEVeTaPZRIXTFJ3s7tJYpAPKk566pNNN+YrW9CV3PvSjZMkUy41ZNtRV29UhvYCqkxV7iI1yeZK8uwMMVi7lt/118nxPgiXxM8rEa2MFi1XF5dcj9I4v4YwQNsN8LetdBC47qfx/9uWbSU9VS4pC1BhdgWZ6lbh/Qof8Y7b78ehyCRUTjmyb13PweEPWzQNf467jaUnsWFecDMsoHB4JtdXbb6T/Fe4O1izGygq9gol3YBVzOSVrN59a3fFe3HwB+AkgfYj6N0QvSO2VzGMixwh4+lMbKKZn0TpBxePNjGnse+G20931CF/AK1USCA=
+sidebar_class_name: 'get api-method'
+info_path: developers/api/api
+custom_edit_url: null
+---
+
+import ApiTabs from '@theme/ApiTabs'
+import DiscriminatorTabs from '@theme/DiscriminatorTabs'
+import MethodEndpoint from '@theme/ApiExplorer/MethodEndpoint'
+import SecuritySchemes from '@theme/ApiExplorer/SecuritySchemes'
+import MimeTabs from '@theme/MimeTabs'
+import ParamsItem from '@theme/ParamsItem'
+import ResponseSamples from '@theme/ResponseSamples'
+import SchemaItem from '@theme/SchemaItem'
+import SchemaTabs from '@theme/SchemaTabs'
+import Heading from '@theme/Heading'
+import OperationTabs from '@theme/OperationTabs'
+import TabItem from '@theme/TabItem'
+
+<Heading as={'h1'} className={'openapi__heading'} children={'Get Track Access Info'}></Heading>
+
+<MethodEndpoint method={'get'} path={'/tracks/{track_id}/access-info'}></MethodEndpoint>
+
+Gets the information necessary to access the track and what access the given user has.
+
+<Heading
+  id={'request'}
+  as={'h2'}
+  className={'openapi-tabs__heading'}
+  children={'Request'}
+></Heading>
+
+<details
+  style={{ marginBottom: '1rem' }}
+  className={'openapi-markdown__details'}
+  data-collapsed={false}
+  open={true}
+>
+  <summary style={{}}>
+    <h3 className={'openapi-markdown__details-summary-header-params'}>Path Parameters</h3>
+  </summary>
+  <div>
+    <ul>
+      <ParamsItem
+        className={'paramsItem'}
+        param={{
+          name: 'track_id',
+          in: 'path',
+          description: 'A Track ID',
+          required: true,
+          schema: { type: 'string' },
+        }}
+      ></ParamsItem>
+    </ul>
+  </div>
+</details>
+<details
+  style={{ marginBottom: '1rem' }}
+  className={'openapi-markdown__details'}
+  data-collapsed={false}
+  open={true}
+>
+  <summary style={{}}>
+    <h3 className={'openapi-markdown__details-summary-header-params'}>Query Parameters</h3>
+  </summary>
+  <div>
+    <ul>
+      <ParamsItem
+        className={'paramsItem'}
+        param={{
+          name: 'user_id',
+          in: 'query',
+          description: 'The user ID of the user making the request',
+          schema: { type: 'string' },
+        }}
+      ></ParamsItem>
+    </ul>
+  </div>
+</details>
+<div>
+  <div>
+    <ApiTabs label={undefined} id={undefined}>
+      <TabItem label={'200'} value={'200'}>
+        <div>Success</div>
+        <div>
+          <MimeTabs className={'openapi-tabs__mime'} schemaType={'response'}>
+            <TabItem label={'application/json'} value={'application/json'}>
+              <SchemaTabs className={'openapi-tabs__schema'}>
+                <TabItem label={'Schema'} value={'Schema'}>
+                  <details
+                    style={{}}
+                    className={'openapi-markdown__details response'}
+                    data-collapsed={false}
+                    open={true}
+                  >
+                    <summary style={{}} className={'openapi-markdown__details-summary-response'}>
+                      <strong>Schema</strong>
+                    </summary>
+                    <div style={{ textAlign: 'left', marginLeft: '1rem' }}></div>
+                    <ul style={{ marginLeft: '1rem' }}>
+                      <SchemaItem collapsible={true} className={'schemaItem'}>
+                        <details style={{}} className={'openapi-markdown__details'}>
+                          <summary style={{}}>
+                            <span className={'openapi-schema__container'}>
+                              <strong className={'openapi-schema__property'}>data</strong>
+                              <span className={'openapi-schema__name'}>object</span>
+                            </span>
+                          </summary>
+                          <div style={{ marginLeft: '1rem' }}>
+                            <SchemaItem collapsible={true} className={'schemaItem'}>
+                              <details style={{}} className={'openapi-markdown__details'}>
+                                <summary style={{}}>
+                                  <span className={'openapi-schema__container'}>
+                                    <strong className={'openapi-schema__property'}>access</strong>
+                                    <span className={'openapi-schema__name'}>object</span>
+                                  </span>
+                                </summary>
+                                <div style={{ marginLeft: '1rem' }}>
+                                  <SchemaItem
+                                    collapsible={false}
+                                    name={'stream'}
+                                    required={true}
+                                    schemaName={'boolean'}
+                                    qualifierMessage={undefined}
+                                    schema={{ type: 'boolean' }}
+                                  ></SchemaItem>
+                                  <SchemaItem
+                                    collapsible={false}
+                                    name={'download'}
+                                    required={true}
+                                    schemaName={'boolean'}
+                                    qualifierMessage={undefined}
+                                    schema={{ type: 'boolean' }}
+                                  ></SchemaItem>
+                                </div>
+                              </details>
+                            </SchemaItem>
+                            <SchemaItem
+                              collapsible={false}
+                              name={'user_id'}
+                              required={true}
+                              schemaName={'string'}
+                              qualifierMessage={undefined}
+                              schema={{
+                                type: 'string',
+                                description: 'The user ID of the owner of this track',
+                              }}
+                            ></SchemaItem>
+                            <SchemaItem
+                              collapsible={false}
+                              name={'blocknumber'}
+                              required={true}
+                              schemaName={'integer'}
+                              qualifierMessage={undefined}
+                              schema={{
+                                type: 'integer',
+                                description: 'The blocknumber this track was last updated',
+                              }}
+                            ></SchemaItem>
+                            <SchemaItem
+                              collapsible={false}
+                              name={'is_stream_gated'}
+                              required={false}
+                              schemaName={'boolean'}
+                              qualifierMessage={undefined}
+                              schema={{
+                                type: 'boolean',
+                                description:
+                                  'Whether or not the owner has restricted streaming behind an access gate',
+                              }}
+                            ></SchemaItem>
+                            <SchemaItem
+                              collapsible={false}
+                              name={'stream_conditions'}
+                              required={false}
+                              schemaName={'object'}
+                              qualifierMessage={undefined}
+                              schema={{ type: 'object', title: 'extended_access_gate' }}
+                            ></SchemaItem>
+                            <SchemaItem
+                              collapsible={false}
+                              name={'is_download_gated'}
+                              required={false}
+                              schemaName={'boolean'}
+                              qualifierMessage={undefined}
+                              schema={{
+                                type: 'boolean',
+                                description:
+                                  'Whether or not the owner has restricted downloading behind an access gate',
+                              }}
+                            ></SchemaItem>
+                            <SchemaItem
+                              collapsible={false}
+                              name={'download_conditions'}
+                              required={false}
+                              schemaName={'object'}
+                              qualifierMessage={undefined}
+                              schema={{ type: 'object', title: 'extended_access_gate' }}
+                            ></SchemaItem>
+                          </div>
+                        </details>
+                      </SchemaItem>
+                    </ul>
+                  </details>
+                </TabItem>
+                <TabItem label={'Example'} value={'Example'}>
+                  <ResponseSamples
+                    responseExample={'{\n  "data": {\n    "access": {\n      "stream": true,\n      "download": true\n    },\n    "user_id": "qm4Ya",\n    "blocknumber": 75099561,\n    "is_stream_gated": false,\n    "stream_conditions": null,\n    "is_download_gated": false,\n    "download_conditions": null\n  }\n}'}
+                    language={'json'}
+                  ></ResponseSamples>
+                </TabItem>
+              </SchemaTabs>
+            </TabItem>
+          </MimeTabs>
+        </div>
+      </TabItem>
+    </ApiTabs>
+  </div>
+</div>

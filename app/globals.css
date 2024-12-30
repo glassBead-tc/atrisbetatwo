@@ -2,6 +2,185 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-family: "AvenirNext LT Pro", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  
+  --font-weight-ultralight: 100;
+  --font-weight-thin: 200;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-demi: 600;
+  --font-weight-bold: 700;
+  --font-weight-heavy: 900;
+
+  --display-xl-size: 6rem;
+  --display-xl-line: 7.5rem;
+  --display-xl-spacing: 0;
+  --display-l-size: 4.5rem;
+  --display-l-line: 6rem;
+  --display-l-spacing: 0;
+  --display-m-size: 3.5rem;
+  --display-m-line: 4.5rem;
+  --display-m-spacing: 0;
+  --display-s-size: 2.625rem;
+  --display-s-line: 3.25rem;
+  --display-s-spacing: 0;
+
+  --heading-xl-size: 2.25rem;
+  --heading-xl-line: 3rem;
+  --heading-xl-spacing: 0;
+  --heading-l-size: 1.75rem;
+  --heading-l-line: 2.25rem;
+  --heading-l-spacing: 0;
+  --heading-m-size: 1.5rem;
+  --heading-m-line: 2rem;
+  --heading-m-spacing: 0;
+  --heading-s-size: 1.25rem;
+  --heading-s-line: 1.5rem;
+  --heading-s-spacing: 0;
+
+  --title-l-size: 1.125rem;
+  --title-l-line: 1.5rem;
+  --title-l-spacing: 0;
+  --title-m-size: 1rem;
+  --title-m-line: 1.5rem;
+  --title-m-spacing: 0;
+  --title-s-size: 0.875rem;
+  --title-s-line: 1.25rem;
+  --title-s-spacing: 0;
+  --title-xs-size: 0.75rem;
+  --title-xs-line: 1rem;
+  --title-xs-spacing: 0;
+
+  --label-xl-size: 1.25rem;
+  --label-xl-line: 1.5rem;
+  --label-xl-spacing: 0.5px;
+  --label-l-size: 1rem;
+  --label-l-line: 1rem;
+  --label-l-spacing: 0.5px;
+  --label-m-size: 0.875rem;
+  --label-m-line: 1rem;
+  --label-m-spacing: 0.5px;
+  --label-s-size: 0.75rem;
+  --label-s-line: 0.75rem;
+  --label-s-spacing: 0.5px;
+  --label-xs-size: 0.625rem;
+  --label-xs-line: 0.75rem;
+  --label-xs-spacing: 0.5px;
+
+  --body-l-size: 1.125rem;
+  --body-l-line: 1.5rem;
+  --body-l-spacing: 0;
+  --body-m-size: 1rem;
+  --body-m-line: 1.5rem;
+  --body-m-spacing: 0;
+  --body-s-size: 0.875rem;
+  --body-s-line: 1.25rem;
+  --body-s-spacing: 0;
+  --body-xs-size: 0.75rem;
+  --body-xs-line: 1rem;
+  --body-xs-spacing: 0;
+
+  --primary-p100: #D63FE6;
+  --primary-p200: #D127E3;
+  --primary-p300: #CC0FE0;
+  --primary-p400: #B80ECA;
+  --primary-p500: #A30CB3;
+  
+  --secondary-s100: #9849D6;
+  --secondary-s200: #8B32D1;
+  --secondary-s300: #7E1BCC;
+  --secondary-s400: #7118B8;
+  --secondary-s500: #6516A3;
+  
+  --neutral-n25: #FCFCFC;
+  --neutral-n50: #F7F7F9;
+  --neutral-n100: #F2F2F4;
+  --neutral-n150: #E7E6EB;
+  --neutral-n200: #DAD9E0;
+  --neutral-n300: #CECDD6;
+  --neutral-n400: #C2C0CC;
+  --neutral-n500: #B6B3C2;
+  --neutral-n600: #AAA7B8;
+  --neutral-n700: #9D9AAD;
+  --neutral-n800: #858199;
+  --neutral-n900: #78748A;
+  --neutral-n950: #6A677A;
+
+  --special-white: #FFFFFF;
+  --special-background: #F3F0F7;
+  --special-blue: #1BA1F1;
+  --special-orange: #FF9400;
+  --special-red: #D0021B;
+  --special-darkRed: #BB0218;
+  --special-green: #0F9E48;
+  --special-lightGreen: #13C65A;
+  --special-trendingBlue: #216FDC;
+  --special-aiGreen: #1FD187;
+  
+  --text-heading: var(--neutral-n950);
+  --text-default: var(--neutral-n900);
+  --text-subdued: var(--neutral-n800);
+  --text-disabled: var(--neutral-n500);
+  --text-active: var(--primary-p300);
+  --text-accent: var(--secondary-s300);
+  --text-staticWhite: #FFFFFF;
+  --text-warning: var(--special-orange);
+  --text-danger: var(--special-red);
+  --text-premium: var(--special-lightGreen);
+  --text-special: var(--special-blue);
+  
+  --background-default: var(--special-background);
+  --background-white: var(--special-white);
+  --background-surface1: var(--neutral-n50);
+  --background-surface2: var(--neutral-n100);
+  --background-accent: var(--secondary-s300);
+  
+  --border-default: var(--neutral-n200);
+  --border-strong: var(--neutral-n300);
+  --border-accent: var(--secondary-s300);
+  
+  --focus-default: var(--secondary-s300);
+  
+  --status-error: var(--special-red);
+  --status-warning: var(--special-orange);
+  --status-success: var(--special-green);
+
+  --shadow-near: 0px 2px 5px rgba(0, 0, 0, 0.05), 0px 1px 1px rgba(0, 0, 0, 0.05), 0px 0px 0px 0.5px rgba(0, 0, 0, 0.05);
+  --shadow-mid: 0px 2px 10px rgba(0, 0, 0, 0.1), 0px 1px 2px rgba(0, 0, 0, 0.05), 0px 0px 0px 0.5px rgba(0, 0, 0, 0.05);
+  --shadow-mid-inverted: 0px -2px 10px rgba(0, 0, 0, 0.1), 0px -1px 2px rgba(0, 0, 0, 0.05), 0px 0px 0px 0.5px rgba(0, 0, 0, 0.05);
+  --shadow-far: 0px 16px 24px rgba(0, 0, 0, 0.1), 0px 2px 8px rgba(0, 0, 0, 0.05), 0px 0px 0px 0.5px rgba(0, 0, 0, 0.05);
+  --shadow-emphasis: 0px 0px 4px rgba(0, 0, 0, 0.15);
+  --shadow-special: 0px 8px 16px var(--artwork-shadow-color, rgba(0, 0, 0, 0.15));
+
+  --radius-xs: 2px;
+  --radius-s: 4px;
+  --radius-m: 8px;
+  --radius-l: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 32px;
+  --radius-3xl: 48px;
+  --radius-full: 9999px;
+
+  --spacing-2xs: 2px;
+  --spacing-xs: 4px;
+  --spacing-s: 8px;
+  --spacing-m: 12px;
+  --spacing-l: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+  --spacing-button: var(--spacing-m);
+  --spacing-card: var(--spacing-l);
+  --spacing-section: var(--spacing-2xl);
+  --spacing-container: var(--spacing-xl);
+  --spacing-stack: var(--spacing-s);
+  --spacing-inline: var(--spacing-xs);
+  --spacing-form: var(--spacing-m);
+}
+
 body {
   color: #f8f8f8;
   background: #131318;

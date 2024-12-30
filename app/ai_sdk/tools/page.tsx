@@ -93,7 +93,7 @@ export default function Page() {
         className="flex flex-col gap-2 px-2 h-[650px] overflow-y-auto"
       >
         {data.map((item, i) => (
-          <div key={i} className="p-4 bg-[#25252f] rounded-lg">
+          <div key={i} className="p-4 bg-[#1a1a20] rounded-lg">
             {options.streamEvents ? (
               <>
                 <strong>Event:</strong> <p className="text-sm">{item.event}</p>
