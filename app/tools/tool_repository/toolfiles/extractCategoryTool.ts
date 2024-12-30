@@ -1,6 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { QueryType, EntityType, ComplexityLevel } from "../../types.js";
+import { QueryType, EntityType, ComplexityLevel } from "../../../../types/types";
 
 export const extractCategoryTool = tool(
   async (input: { query: string }): Promise<{

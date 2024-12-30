@@ -1,4 +1,4 @@
-import { getAudiusSdk } from '../services/sdkClient'
+import { getAudiusSdk } from '../../../services/audius_chat/audiusSdk';
 import { tool } from "@langchain/core/tools";
 import { z } from "zod"
 import { GraphState, 
@@ -9,9 +9,9 @@ import { GraphState,
   SearchFullResponse,
   GetFavoritesRequest,
   ApiEndpoint,
-} from "../types";
+} from "../../../types/types";
 import fs from "fs";
-import { TRIMMED_CORPUS_PATH, BASE_URL } from "../constants";
+import { TRIMMED_CORPUS_PATH, BASE_URL } from "../../../constants/constants";
 import { END } from "@langchain/langgraph";
 import type { 
   TracksResponse, 
@@ -27,9 +27,9 @@ import type {
 } from '@audius/sdk';
 import { ChatOpenAI } from "@langchain/openai";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-import { TrackSDKMethods } from "../services/entity_methods/tracks/trackSDKMethods";
-import { UserSDKMethods } from "../services/entity_methods/users/userSDKMethods";
-import { PlaylistSDKMethods } from "../services/entity_methods/playlists/playlistSDKMethods";
+import { TrackSDKMethods } from "../../../services/audius_chat/entity_methods/tracks/trackSDKMethods";
+import { UserSDKMethods } from "../../../services/audius_chat/entity_methods/users/userSDKMethods";
+import { PlaylistSDKMethods } from "../../../services/audius_chat/entity_methods/playlists/playlistSDKMethods";
 import { analyzeQuery } from './utils/queryAnalysis';
 import dotenv from 'dotenv';
 import { calculateArtistPopularity } from './utils/calculateArtistPopularity';
