@@ -5,12 +5,11 @@ import Link from 'next/link';
 
 interface NavLinkProps {
   href: string;
-  icon: string;
   label: string;
   isActive: boolean;
 }
 
-function NavLink({ href, icon, label, isActive }: NavLinkProps) {
+function NavLink({ href, label, isActive }: NavLinkProps) {
   return (
     <Link 
       href={href}
@@ -36,7 +35,6 @@ function NavLink({ href, icon, label, isActive }: NavLinkProps) {
         ` : ''}
       `}
     >
-      <span className="mr-[var(--spacing-xs)]">{icon}</span>
       {label}
     </Link>
   );
@@ -63,7 +61,6 @@ export function Navbar() {
         <NavLink
           key={item.href}
           href={item.href}
-          icon={item.icon}
           label={item.label}
           isActive={pathname === item.href}
         />

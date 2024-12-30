@@ -45,7 +45,7 @@ import { GetTrendingTracksTimeEnum,
  } from '@audius/sdk/dist/sdk/api/generated/full/apis/TracksApi.js';
 import { GetTrendingTracksRequest, GetFavoritesRequest } from '@audius/sdk/dist/sdk/api/generated/full/apis';
 import { Messages, END } from '@langchain/langgraph'
-import { MinimalAudiusSDK } from './services/sdkClient.js';
+import { MinimalAudiusSDK } from '../services/audius_chat/audiusSdk';
 
 export { SearchFullResponse, 
   RemixablesResponse, 

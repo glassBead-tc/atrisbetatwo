@@ -129,11 +129,12 @@ export class MCPService {
         ],
       };
     } catch (error) {
+      const err = error as Error;
       return {
         content: [
           {
             type: "text",
-            text: `Error building corpus: ${error.message}`,
+            text: `Error building corpus: ${err.message}`,
           },
         ],
       };
@@ -155,11 +156,12 @@ export class MCPService {
         ],
       };
     } catch (error) {
+      const err = error as Error;
       return {
         content: [
           {
             type: "text",
-            text: `Error querying corpus: ${error.message}`,
+            text: `Error querying corpus: ${err.message}`,
           },
         ],
       };
@@ -342,7 +344,7 @@ export class MCPService {
       tool_name: 'Audius Docs',
       doc_name: metadata.title || path.basename(docPath, '.mdx'),
       doc_description: metadata.description || '',
-      tags: metadata.tags ? metadata.tags.split(',').map(t => t.trim()) : [],
+      tags: metadata.tags ? metadata.tags.split(',').map((tag: string) => tag.trim()) : [],
       unlisted: metadata.unlisted === 'true'
     };
   }

@@ -16,7 +16,7 @@ import {
   GetNFTGatedTrackSignaturesRequest,
   GetTrendingUSDCPurchaseTracksTimeEnum,
   GetTrendingTracksRequest,
-} from '../../../../types.js';
+} from '../../../../types/types.js';
 
 export class TrackSDKMethods {
   private baseUrl: string;
