@@ -2330,6 +2330,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@modelcontextprotocol/sdk@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@modelcontextprotocol/sdk@npm:1.0.4"
+  dependencies:
+    content-type: ^1.0.5
+    raw-body: ^3.0.0
+    zod: ^3.23.8
+  checksum: 4f706b30a3c88b4bf98023d81f0c0b18e5522c5bc96afa9df80a7a6f603dffeaf46e16018103fcc573faae1778e2a6b059f4161a33775c11466595b52ef283f4
+  languageName: node
+  linkType: hard
+
 "@multiformats/murmur3@npm:^1.0.3":
   version: 1.1.3
   resolution: "@multiformats/murmur3@npm:1.1.3"
@@ -5241,7 +5252,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"content-type@npm:~1.0.4, content-type@npm:~1.0.5":
+"content-type@npm:^1.0.5, content-type@npm:~1.0.4, content-type@npm:~1.0.5":
   version: 1.0.5
   resolution: "content-type@npm:1.0.5"
   checksum: 566271e0a251642254cde0f845f9dd4f9856e52d988f4eb0d0dcffbb7a1f8ec98de7a5215fc628f3bce30fe2fb6fd2bc064b562d721658c59b544e2d34ea2766
@@ -7864,7 +7875,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"iconv-lite@npm:^0.6.2":
+"iconv-lite@npm:0.6.3, iconv-lite@npm:^0.6.2":
   version: 0.6.3
   resolution: "iconv-lite@npm:0.6.3"
   dependencies:
@@ -8835,6 +8846,7 @@ __metadata:
     "@langchain/exa": ^0.1.0
     "@langchain/langgraph": ^0.2.20
     "@langchain/openai": ^0.3.11
+    "@modelcontextprotocol/sdk": ^1.0.4
     "@next/bundle-analyzer": ^13.4.19
     "@supabase/supabase-js": ^2.47.10
     "@types/node": 20.12.12
@@ -10682,6 +10694,18 @@ __metadata:
     iconv-lite: 0.4.24
     unpipe: 1.0.0
   checksum: ba1583c8d8a48e8fbb7a873fdbb2df66ea4ff83775421bfe21ee120140949ab048200668c47d9ae3880012f6e217052690628cf679ddfbd82c9fc9358d574676
+  languageName: node
+  linkType: hard
+
+"raw-body@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "raw-body@npm:3.0.0"
+  dependencies:
+    bytes: 3.1.2
+    http-errors: 2.0.0
+    iconv-lite: 0.6.3
+    unpipe: 1.0.0
+  checksum: 25b7cf7964183db322e819050d758a5abd0f22c51e9f37884ea44a9ed6855a1fb61f8caa8ec5b61d07e69f54db43dbbc08ad98ef84556696d6aa806be247af0e
   languageName: node
   linkType: hard
 

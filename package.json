@@ -20,6 +20,7 @@
     "@langchain/exa": "^0.1.0",
     "@langchain/langgraph": "^0.2.20",
     "@langchain/openai": "^0.3.11",
+    "@modelcontextprotocol/sdk": "^1.0.4",
     "@next/bundle-analyzer": "^13.4.19",
     "@supabase/supabase-js": "^2.47.10",
     "@types/node": "20.12.12",

@@ -1,7 +1,7 @@
 import path from "path";
 import { Genre, Mood, StemCategory } from '@audius/sdk';
 
-export const TRIMMED_CORPUS_PATH = path.join(process.cwd(), 'src/app/data/audius_corpus.json');
+export const TRIMMED_CORPUS_PATH = path.join(process.cwd(), '../data/audius_corpus.json');
 
 export const EXTRACT_HIGH_LEVEL_CATEGORIES = {
   // Content Discovery
