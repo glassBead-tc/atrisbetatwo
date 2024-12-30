@@ -12,6 +12,8 @@ import {
   HumanMessage,
   SystemMessage,
 } from "@langchain/core/messages";
+import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+import { RunnableSequence } from "@langchain/core/runnables";
 
 export const runtime = "edge";
 
@@ -64,7 +66,10 @@ export async function POST(req: NextRequest) {
 
     // Requires process.env.SERPAPI_API_KEY to be set: https://serpapi.com/
     // You can remove this or use a different tool instead.
-    const tools = [new Calculator(), new SerpAPI()];
+    const tools = [
+      new Calculator(),
+      new TavilySearchResults({ apiKey: process.env.TAVILY_API_KEY! }),
+    ];
     const chat = new ChatOpenAI({
       model: "gpt-4o-mini",
       temperature: 0,
