@@ -45,7 +45,7 @@ export const selectApiTool = tool(
     isTrendingQuery: boolean;
     isGenreQuery: boolean;
   }): Promise<{
-    bestApi: DatasetSchema;
+    bestApi: ApiEndpoint;
     queryType: QueryType;
     entityType: EntityType | null;
   }> => {

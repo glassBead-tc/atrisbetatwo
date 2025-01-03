@@ -10,10 +10,7 @@ export const resetStateTool = tool(
       categories: [],
       entityType: null,
       queryType: null,
-      isTrendingQuery: false,
-      isGenreQuery: false,
-      selectedApi: null,
-      apiParameters: null,
+      parameters: null,
       response: null,
       formattedResponse: null,
       error: null
