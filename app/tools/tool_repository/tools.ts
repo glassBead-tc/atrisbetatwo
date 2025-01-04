@@ -1,4 +1,4 @@
-import { getAudiusSdk } from '../../../services/audius_chat/audiusSdk';
+import { getAudiusSdk } from '../../../services/audius_chat/audiusSdk.js';
 import { tool } from "@langchain/core/tools";
 import { z } from "zod"
 import { GraphState, 
@@ -9,9 +9,9 @@ import { GraphState,
   SearchFullResponse,
   GetFavoritesRequest,
   ApiEndpoint,
-} from "../../../types/types";
+} from "../../../types/types.js";
 import fs from "fs";
-import { TRIMMED_CORPUS_PATH, BASE_URL } from "../../../constants/constants";
+import { TRIMMED_CORPUS_PATH, BASE_URL } from "../../../constants/constants.js";
 import { END } from "@langchain/langgraph";
 import type { 
   TracksResponse, 
@@ -27,14 +27,14 @@ import type {
 } from '@audius/sdk';
 import { ChatOpenAI } from "@langchain/openai";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-import { TrackSDKMethods } from "../../../services/audius_chat/entity_methods/tracks/trackSDKMethods";
-import { UserSDKMethods } from "../../../services/audius_chat/entity_methods/users/userSDKMethods";
-import { PlaylistSDKMethods } from "../../../services/audius_chat/entity_methods/playlists/playlistSDKMethods";
-import { analyzeQuery } from './utils/queryAnalysis';
+import { TrackSDKMethods } from "../../../services/audius_chat/entity_methods/tracks/trackSDKMethods.js";
+import { UserSDKMethods } from "../../../services/audius_chat/entity_methods/users/userSDKMethods.js";
+import { PlaylistSDKMethods } from "../../../services/audius_chat/entity_methods/playlists/playlistSDKMethods.js";
+import { analyzeQuery } from './utils/queryAnalysis.js';
 import dotenv from 'dotenv';
-import { calculateArtistPopularity } from './utils/calculateArtistPopularity';
-import { calculateGenrePopularity } from './utils/calculateGenrePopularity';
-import { extractGenreFromQuery } from './utils/extractGenre';
+import { calculateArtistPopularity } from './utils/calculateArtistPopularity.js';
+import { calculateGenrePopularity } from './utils/calculateGenrePopularity.js';
+import { extractGenreFromQuery } from './utils/extractGenre.js';
 
 // Add at the top with other type imports
 type ApiCategory = 'Tracks' | 'Playlists' | 'Users';

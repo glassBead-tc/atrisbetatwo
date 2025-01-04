@@ -4,14 +4,9 @@ import axios from 'axios';
 import {
   PlaylistResponse,
   FavoritesResponse,
-  FullPlaylistResponse,
-  PlaylistLibrary,
-  GetTrendingPlaylistsRequest,
   TrendingPlaylistsResponse,
-  GetTrendingPlaylistsTimeEnum,
   SearchFullResponse,
 } from '../../../../types/types.js';
-import { BASE_URL } from '../../../../constants/constants.js';
 import dotenv from 'dotenv';
 
 dotenv.config();

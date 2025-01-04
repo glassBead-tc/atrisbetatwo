@@ -1,5 +1,5 @@
 // backend/app/tools/utils/calculateGenrePopularity.ts
-import { apiLogger } from '../../logger';
+import { apiLogger } from '../../../logger';
 
 // Define interface matching actual API response shape
 interface ApiTrack {

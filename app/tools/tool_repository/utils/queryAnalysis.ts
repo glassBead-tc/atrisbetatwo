@@ -1,6 +1,6 @@
-import { HIGH_LEVEL_CATEGORIES, HighLevelCategory, isAudiusQuery, CategoryTrigger } from '../../constants';
+import { HIGH_LEVEL_CATEGORIES, HighLevelCategory, isAudiusQuery, CategoryTrigger } from '../../../../constants/constants';
 import { entityPropertyMap } from '../propertyMap';
-import type { EntityType } from '../../types';
+import type { EntityType } from '../../../../types/types';
 
 // Technical keywords that indicate a non-entity query
 const TECHNICAL_KEYWORDS = [

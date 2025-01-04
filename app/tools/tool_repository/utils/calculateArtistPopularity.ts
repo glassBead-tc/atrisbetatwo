@@ -1,4 +1,4 @@
-import { apiLogger } from '../../logger';
+import { apiLogger } from '../../../logger';
 
 // Use a more permissive type that matches actual API response
 interface ApiTrack {

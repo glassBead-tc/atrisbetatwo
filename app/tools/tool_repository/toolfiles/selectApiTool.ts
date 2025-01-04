@@ -10,7 +10,7 @@ import {
 import { TRIMMED_CORPUS_PATH } from "../../../../constants/constants";
 
 type ApiCategory = 'Tracks' | 'Playlists' | 'Users';
-type QueryType = 
+type EntityQueryType = 
   | 'trending_tracks'
   | 'trending_playlists'
   | 'trending_artists'
@@ -41,19 +41,19 @@ export const selectApiTool = tool(
   async (input: { 
     categories: string[];
     entityType: EntityType | null;
-    queryType: QueryType;
+    queryType: EntityQueryType;
     isTrendingQuery: boolean;
     isGenreQuery: boolean;
   }): Promise<{
-    bestApi: ApiEndpoint;
-    queryType: QueryType;
+    selectedApi: ApiEndpoint;
+    queryType: EntityQueryType;
     entityType: EntityType | null;
   }> => {
     try {
       // Only use genre popularity calculation for trending genre queries
       if (input.isTrendingQuery && input.isGenreQuery && !input.entityType) {
         return {
-          bestApi: {
+          selectedApi: {
             id: 'calculate_genre_popularity',
             api_name: 'Calculate Genre Popularity',
             category_name: 'Genres',
@@ -81,7 +81,7 @@ export const selectApiTool = tool(
       // Special handling for trending artists
       if (input.queryType === 'trending_artists') {
         return {
-          bestApi: {
+          selectedApi: {
             id: 'calculate_trending_artists',
             api_name: 'Calculate Trending Artists',
             category_name: 'Users',
@@ -149,7 +149,7 @@ export const selectApiTool = tool(
       const selectedApi = apis[0];
       
       return {
-        bestApi: selectedApi,
+        selectedApi: selectedApi,
         queryType: input.queryType,
         entityType: input.entityType
       };
@@ -163,8 +163,20 @@ export const selectApiTool = tool(
     description: "Selects appropriate API based on query type and categories",
     schema: z.object({
       categories: z.array(z.string()),
-      entityType: z.union([z.string(), z.null()]),
-      queryType: z.string(),
+      entityType: z.enum(['track', 'user', 'playlist']).nullable(),
+      queryType: z.enum([
+        'trending_tracks',
+        'trending_playlists',
+        'trending_artists',
+        'artists_by_genre',
+        'top_artists',
+        'genre_info',
+        'genre_popularity',
+        'general',
+        'tracks',
+        'users',
+        'playlists'
+      ]),
       isTrendingQuery: z.boolean(),
       isGenreQuery: z.boolean()
     })

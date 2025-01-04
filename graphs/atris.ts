@@ -1,377 +1,429 @@
-import { StateGraph, RunnableSequence } from "@langchain/langgraph";
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { ChatOpenAI } from "@langchain/openai";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
-import { MinimalAudiusSDK } from "../services/audius_chat/audiusSdk";
-import { analyzeQuery } from "../app/tools/tool_repository/utils/queryAnalysis";
-import { parseQuery } from "../app/tools/tool_repository/utils/searchUtils";
-import { createClient } from "@supabase/supabase-js/dist/module";
-import { z } from "zod";
+// /**
+//  * Atris Graph Implementation
+//  * 
+//  * This file implements a state-based graph system for processing queries through multiple stages
+//  * including API calls, RAG (Retrieval Augmented Generation), and response formatting.
+//  */
 
-import dotenv from "dotenv";
-dotenv.config();
-const supabaseUrl = !process.env.SUPABASE_URL;
-const supabasePrivateKey = !process.env.SUPABASE_PRIVATE_KEY;
-const openAIKey = !process.env.OPENAI_API_KEY;
+// // External dependencies for graph processing, AI models, and data storage
+// import { StateGraph, type StateGraphArgs } from "@langchain/langgraph";
+// import { ChatPromptTemplate } from "@langchain/core/prompts";
+// import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+// import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
+// import { BaseMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
+// import { type Runnable, RunnableSequence } from "@langchain/core/runnables";
+// import { Operation } from "@langchain/core/utils/types";
+// import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+// import { MinimalAudiusSDK } from "../services/audius_chat/audiusSdk";
+// import { createClient } from "@supabase/supabase-js";
+// import { z } from "zod";
 
+// /**
+//  * Type helper for annotating state properties that can be operated on
+//  * Used to mark fields that support specific operations like push
+//  */
+// type Annotated<T, O extends Operation> = T;
 
-// State and Type Definitions
-interface AgentState {
-  query: string;
-  steps: Array<{
-    action: string;
-    result: string;
-  }>;
-  response?: string;
-  context?: string[];
-  docGrade?: {
-    relevance: number;
-    needsWebSearch: boolean;
-    reasoning: string;
-  };
-  skipHallucination?: boolean;
-}
-
-const routerSchema = z.object({
-  type: z.enum(["api", "docs", "both"])
-});
-
-const docGradeSchema = z.object({
-  relevance: z.number().min(0).max(1),
-  needsWebSearch: z.boolean(),
-  reasoning: z.string()
-});
-
-// Helper function for safe JSON parsing
-function parseJSON<T>(
-  json: string, 
-  schema: z.ZodType<T>
-): T | null {
-  try {
-    const parsed = JSON.parse(json);
-    const result = schema.safeParse(parsed);
-    if (result.success) {
-      return result.data;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-// Node creation factory
-const createNodes = async (
-  sdk: MinimalAudiusSDK,
-  vectorStore: SupabaseVectorStore,
-  llm: ChatOpenAI
-) => {
-  // Router node
-  const routerNode = async (state: AgentState) => {
-    const routerPrompt = ChatPromptTemplate.fromTemplate(`
-      Determine if this query requires API access, documentation lookup, or both.
-      Query: {query}
-      Output as JSON: {"type": "api"|"docs"|"both"}
-    `);
-    
-    const messages = await routerPrompt.formatMessages({
-      query: state.query
-    });
-    const response = await llm.invoke(messages);
-
-    // Convert the response content to string if it's not already
-    const contentString = typeof response.content === 'string' 
-      ? response.content 
-      : response.content.map(c => {
-          if (typeof c === 'string') return c;
-          if ('text' in c) return c.text;
-          return '';  // Skip non-text content
-        }).join('');
-
-    const decision = parseJSON(contentString, routerSchema);
-    if (!decision) {
-      throw new Error("Invalid router response format");
-    }
-    
-    return {
-      steps: [...(state.steps ?? []), {
-        action: "route",
-        result: decision.type
-      }]
-    };
-  };
-
-  // API query node
-  const apiNode = async (state: AgentState) => {
-    // Analyze the query to determine type and entity
-    const analysis = analyzeQuery(state.query);
-    const parsedQuery = parseQuery(state.query);
-    
-    let result;
-    
-    // Handle based on query analysis
-    if (analysis.isTrendingQuery) {
-      // Handle trending queries
-      if (analysis.entityType === 'track') {
-        result = await sdk.tracks.getTrendingTracks({ limit: parsedQuery.limit || 10 });
-      } else if (analysis.entityType === 'playlist') {
-        result = await sdk.playlists.getTrendingPlaylists({ limit: parsedQuery.limit || 10 });
-      }
-    } else {
-      // Handle search queries based on entity type
-      switch (analysis.entityType) {
-        case 'track':
-          result = await sdk.tracks.searchTracks(state.query);
-          break;
-        case 'user':
-          result = await sdk.users.searchUsers(state.query);
-          break;
-        case 'playlist':
-          result = await sdk.playlists.searchPlaylists(state.query);
-          break;
-        default:
-          // Default to track search if entity type is unclear
-          result = await sdk.tracks.searchTracks(state.query);
-      }
-    }
-
-    return {
-      steps: [...(state.steps ?? []), {
-        action: "api_query",
-        result: JSON.stringify(result)
-      }]
-    };
-  };
-
-  // RAG query node
-  const ragNode = async (state: AgentState) => {
-    const docs = await vectorStore.similaritySearch(
-      state.query,
-      3
-    );
-    return {
-      context: docs.map(d => d.pageContent),
-      steps: [...(state.steps ?? []), {
-        action: "rag_query",
-        result: JSON.stringify(docs.map(d => d.pageContent))
-      }]
-    };
-  };
-
-  // Document grading node
-  const docGradeNode = async (state: AgentState) => {
-    const gradePrompt = ChatPromptTemplate.fromTemplate(`
-      Grade the relevance of these documents for the query.
-      Query: {query}
-      Documents: {docs}
-      Output JSON format: {
-        "relevance": number 0-1,
-        "needsWebSearch": boolean,
-        "reasoning": string
-      }
-    `);
-
-    const messages = await gradePrompt.formatMessages({
-      query: state.query,
-      docs: state.context?.join("\n") ?? ""
-    });
-    const response = await llm.invoke(messages);
-
-    // Convert the response content to string if it's not already
-    const contentString = typeof response.content === 'string' 
-      ? response.content 
-      : response.content.map(c => {
-          if (typeof c === 'string') return c;
-          if ('text' in c) return c.text;
-          return '';  // Skip non-text content
-        }).join('');
-
-    const grading = parseJSON(contentString, docGradeSchema);
-    if (!grading) {
-      throw new Error("Invalid grading format");
-    }
-
-    return {
-      docGrade: grading,
-      skipHallucination: grading.relevance < 0.3
-    };
-  };
-
-  // Web search node
-  const webSearchNode = async (state: AgentState) => {
-    // Web search implementation would go here
-    // For now we'll return a placeholder
-    return {
-      steps: [...(state.steps ?? []), {
-        action: "web_search",
-        result: "Web search results would go here"
-      }]
-    };
-  };
-
-  // Format node
-  const formatNode = async (state: AgentState) => {
-    const formatPrompt = ChatPromptTemplate.fromTemplate(`
-      Generate a natural response using all available information.
-      Query: {query}
-      Context: {context}
-      
-      Response Guidelines:
-      1. If API data is available, prioritize it for current/real-time information
-      2. Use documentation to provide additional context and explanation
-      3. If sources conflict, explain the discrepancy
-      4. Cite the source of information (API vs docs vs web) when relevant
-      5. Be direct and concise in your response
-      
-      Response:
-    `);
-
-    // Collect all available results
-    let contextSections: string[] = [];
-    
-    // Get API results (if any)
-    const apiStep = state.steps.find(s => s.action === "api_query");
-    if (apiStep) {
-      contextSections.push(`API Response:\n${apiStep.result}`);
-    }
-
-    // Get doc context (if any)
-    if (state.docGrade?.relevance && state.docGrade.relevance > 0.3) {
-      contextSections.push(
-        `Documentation Context:\n${state.context?.join("\n")}`
-      );
-    }
-
-    // Get web results (if any)
-    const webStep = state.steps.find(s => s.action === "web_search");
-    if (webStep) {
-      contextSections.push(`Web Search Results:\n${webStep.result}`);
-    }
-
-    // If no context available, note that
-    if (contextSections.length === 0) {
-      contextSections.push(
-        "No data available from API, documentation, or web search."
-      );
-    }
-
-    const messages = await formatPrompt.formatMessages({
-      query: state.query,
-      context: contextSections.join("\n\n")
-    });
-    const response = await llm.invoke(messages);
-
-    // Convert the response content to string if it's not already
-    const contentString = typeof response.content === 'string' 
-      ? response.content 
-      : response.content.map(c => {
-          if (typeof c === 'string') return c;
-          if ('text' in c) return c.text;
-          return '';  // Skip non-text content
-        }).join('');
-
-    return {
-      response: contentString,
-      steps: [...state.steps, {
-        action: "format",
-        result: contentString
-      }]
-    };
-  };
-
-  return {
-    routerNode,
-    apiNode,
-    ragNode,
-    docGradeNode,
-    webSearchNode,
-    formatNode
-  };
-};
-
-// Main graph creation function
-export const createAtrisGraph = async (config: {
-  supabaseUrl: string;
-  supabaseKey: string;
-  openAIKey: string;
-  audiusApiKey: string;
-  model?: string;
-  temperature?: number;
-}) => {
-  // Initialize services
-  const sdk = new MinimalAudiusSDK(config.audiusApiKey);
+// /**
+//  * Core state interface that maintains the graph's state throughout processing
+//  */
+// interface AtrisState {
+//   /** Collection of messages in the conversation */
+//   messages: BaseMessage[];
   
-  const embeddings = new OpenAIEmbeddings({
-    openAIApiKey: config.openAIKey
-  });
+//   /** Current user query being processed */
+//   query: string;
+  
+//   /** Collection of API results from various endpoints */
+//   apiResults: Annotated<Array<{
+//     endpoint: string;
+//     result: unknown;
+//   }>, typeof Operation.push>;
+  
+//   /** Quality assessment of current results */
+//   grading?: {
+//     quality: number;    // Score between 0-1
+//     needsRewrite: boolean;  // Whether response needs improvement
+//   };
 
-  const vectorStore = await SupabaseVectorStore.fromExistingIndex(
-    embeddings,
-    {
-      client: createClient(config.supabaseUrl, config.supabaseKey),
-      tableName: "documents",
-      queryName: "match_documents"
-    }
-  );
+//   /** Contextual information gathered from various sources */
+//   context: Annotated<string[], typeof Operation.push>;
+// }
 
-  const llm = new ChatOpenAI({
-    modelName: config.model ?? "gpt-4-1106-preview",
-    temperature: config.temperature ?? 0,
-    streaming: true
-  });
+// /**
+//  * Schema for validating grading results
+//  * Ensures quality scores are within bounds and needsRewrite is boolean
+//  */
+// const gradingSchema = z.object({
+//   quality: z.number().min(0).max(1),
+//   needsRewrite: z.boolean()
+// });
 
-  // Create nodes
-  const nodes = await createNodes(sdk, vectorStore, llm);
+// /**
+//  * Safely parses JSON with schema validation
+//  * @param json - JSON string to parse
+//  * @param schema - Zod schema for validation
+//  * @returns Parsed and validated object or null if invalid
+//  */
+// function parseJSON<T>(
+//   json: string, 
+//   schema: z.ZodType<T>
+// ): T | null {
+//   try {
+//     const parsed = JSON.parse(json);
+//     const result = schema.safeParse(parsed);
+//     if (result.success) {
+//       return result.data;
+//     }
+//     return null;
+//   } catch {
+//     return null;
+//   }
+// }
 
-  // Create graph
-  const workflow = new StateGraph({
-    channels: {
-      query: RunnableSequence.from([]),
-      steps: RunnableSequence.from([]),
-      action: RunnableSequence.from([]),
-      result: RunnableSequence.from([]),
-      response: RunnableSequence.from([]),
-      context: RunnableSequence.from([]),
-      docGrade: RunnableSequence.from([]),
-      skipHallucination: RunnableSequence.from([])
-    }
-  });
+// /**
+//  * Prompt template for grading response quality
+//  * Evaluates API results against the original query
+//  */
+// const gradePrompt = ChatPromptTemplate.fromTemplate(`
+//   Grade the quality and relevance of these results for the query.
+//   Query: {query}
+//   Available Results:
+//   {results}
+  
+//   Output as JSON:
+//   {
+//     "quality": number between 0-1,
+//     "needsRewrite": boolean
+//   }
+// `);
 
-  // Add nodes
-  workflow.addNode("__start__", nodes.routerNode);
-  workflow.addNode("api", nodes.apiNode);
-  workflow.addNode("rag", nodes.ragNode);
-  workflow.addNode("docGrade", nodes.docGradeNode);
-  workflow.addNode("webSearch", nodes.webSearchNode);
-  workflow.addNode("format", nodes.formatNode);
+// /**
+//  * Prompt template for web search query formulation
+//  * Generates focused search queries based on context
+//  */
+// const webSearchPrompt = ChatPromptTemplate.fromTemplate(`
+//   Based on the query and available context, formulate a web search query.
+//   Original Query: {query}
+//   Context: {context}
+  
+//   Output only the search query, nothing else.
+// `);
 
-  // Add conditional edges based on router decision
-  workflow.addConditionalEdges(
-    "__start__",
-    (state) => {
-      const lastStep = state.steps[state.steps.length - 1];
-      if (lastStep?.action === "route") {
-        switch(lastStep.result) {
-          case "api": return ["api"];
-          case "docs": return ["rag"];
-          case "both": return ["api", "rag"];
-          default: return ["rag"];
-        }
-      }
-      return ["rag"];
-    }
-  );
+// /**
+//  * Prompt template for final response formatting
+//  * Combines all available information into a coherent response
+//  */
+// const formatPrompt = ChatPromptTemplate.fromTemplate(`
+//   Generate a natural response to this query using all available information.
+//   Query: {query}
+//   Available Context:
+//   {context}
 
-  // Add edges for the rest of the workflow
-  workflow.addEdge("api", "__start__");
-  workflow.addEdge("rag", "docGrade");
-  workflow.addEdge("docGrade", "__start__");
-  workflow.addEdge("webSearch", "__start__");
+//   Guidelines:
+//   1. If API data is available, prioritize it for current/real-time information
+//   2. Use documentation to provide additional context and explanation
+//   3. If sources conflict, explain the discrepancy
+//   4. Cite the source of information (API vs docs vs web) when relevant
+//   5. Be direct and concise
+// `);
 
-  // Set entry/end points
-  workflow.setEntryPoint("__start__");
-  workflow.setFinishPoint("format");
+// // Node Factories
+// /**
+//  * Creates a node for handling API interactions
+//  * This node orchestrates the process of:
+//  * 1. Extracting categories from the query
+//  * 2. Selecting appropriate API endpoints
+//  * 3. Making API requests
+//  * 4. Formatting the responses
+//  */
+// const createApiNode = (
+//   sdk: MinimalAudiusSDK,
+//   model: ChatOpenAI,
+//   extractCategoryTool: any,
+//   selectApiTool: any,
+//   createFetchRequestTool: any,
+//   formatResponseTool: any
+// ): Runnable<AtrisState> => {
+//   const runnable = {
+//     invoke: async (state: AtrisState) => {
+//       // Extract semantic categories from the user query
+//       const categoryResult = await extractCategoryTool.invoke({
+//         query: state.query
+//       });
 
-  // Return compiled graph
-  return workflow.compile();
-};
+//       // Determine which API endpoint best matches the query intent
+//       const apiSelection = await selectApiTool.invoke({
+//         categories: categoryResult.categories,
+//         entityType: categoryResult.entityType,
+//         queryType: categoryResult.queryType,
+//         needsCustomCalc: categoryResult.needsCustomCalc
+//       });
+
+//       // Execute the API request with appropriate parameters
+//       const fetchResult = await createFetchRequestTool.invoke({
+//         apiName: apiSelection.selectedApi,
+//         parameters: apiSelection.parameters
+//       });
+
+//       // Transform the raw API response into a more useful format
+//       const formattedResult = await formatResponseTool.invoke({
+//         response: fetchResult
+//       });
+
+//       return {
+//         apiResults: [{
+//           endpoint: apiSelection.selectedApi,
+//           result: formattedResult.formattedResponse
+//         }]
+//       };
+//     }
+//   };
+
+//   return runnable;
+// };
+
+// /**
+//  * Creates a node for Retrieval Augmented Generation (RAG)
+//  * This node performs similarity search against a vector store
+//  * to find relevant context for the query
+//  */
+// const createRagNode = (vectorStore: SupabaseVectorStore): Runnable<AtrisState> => {
+//   return {
+//     invoke: async (state: AtrisState) => {
+//       // Perform similarity search to find relevant documents
+//       const results = await vectorStore.similaritySearch(state.query);
+//       return {
+//         context: results.map(doc => doc.pageContent)
+//       };
+//     }
+//   };
+// };
+
+// /**
+//  * Creates a node for grading response quality
+//  * This node evaluates the relevance and quality of API results
+//  * and determines if the response needs improvement
+//  */
+// const createGradeNode = (model: ChatOpenAI): Runnable<AtrisState> => {
+//   return {
+//     invoke: async (state: AtrisState) => {
+//       // Format the grading prompt with current state
+//       const formattedPrompt = await gradePrompt.format({
+//         query: state.query,
+//         results: state.apiResults
+//       });
+//       const result = await model.invoke(formattedPrompt);
+
+//       // Handle different content types in the response
+//       const contentString = typeof result.content === 'string' 
+//         ? result.content 
+//         : JSON.stringify(result.content);
+
+//       // Parse and validate the grading result
+//       const grading = parseJSON(contentString, gradingSchema);
+//       if (!grading) {
+//         throw new Error("Failed to parse grading result");
+//       }
+
+//       return {
+//         grading,
+//         quality: grading.quality,
+//         needsRewrite: grading.needsRewrite
+//       };
+//     }
+//   };
+// };
+
+// /**
+//  * Creates a node for web search operations
+//  * This node performs external web searches to gather
+//  * additional context when needed
+//  */
+// const createWebSearchNode = (model: ChatOpenAI, searchTool: TavilySearchResults): Runnable<AtrisState> => {
+//   return {
+//     invoke: async (state: AtrisState) => {
+//       // Execute web search and collect results
+//       const results = await searchTool.invoke(state.query);
+//       return {
+//         context: results.map((r: { content: string }) => r.content)
+//       };
+//     }
+//   };
+// };
+
+// /**
+//  * Creates a node for formatting the final response
+//  * This node combines all available information (API results, RAG context, web search)
+//  * into a coherent natural language response
+//  */
+// const createFormatNode = (model: ChatOpenAI): Runnable<AtrisState> => {
+//   const formatChain = RunnableSequence.from([
+//     // Extract relevant state fields for formatting
+//     {
+//       query: (state: AtrisState) => state.query,
+//       apiResults: (state: AtrisState) => state.apiResults,
+//       context: (state: AtrisState) => state.context
+//     },
+//     formatPrompt,
+//     model,
+//     (response: { content: string }) => ({
+//       messages: [
+//         new HumanMessage(state.query),
+//         new AIMessage({ content: response.content })
+//       ]
+//     })
+//   ]);
+
+//   return formatChain;
+// };
+
+// // Routing Logic
+// /**
+//  * Defines the routing logic for the graph
+//  * Determines the next node to execute based on the current state
+//  */
+// const shouldRunRag = async (state: AtrisState) => {
+//   const grading = state.grading;
+  
+//   // If no grading exists, go to RAG
+//   if (!grading) return "rag";
+  
+//   // If quality is poor, try web search
+//   if (grading.quality < 0.3) return "webSearch";
+  
+//   // Otherwise go to format
+//   return "format";
+// };
+
+// // Main graph creation
+// /**
+//  * Main graph factory function
+//  * Creates and configures the complete processing graph with all nodes and edges
+//  * @param config Configuration object containing API keys and service settings
+//  * @returns Compiled graph ready for processing queries
+//  */
+// export const createAtrisGraph = async (config: {
+//   supabaseUrl: string;
+//   supabaseKey: string;
+//   openAIKey: string;
+//   audiusApiKey: string;
+//   model?: string;
+//   temperature?: number;
+//   extractCategoryTool: any;
+//   selectApiTool: any;
+//   createFetchRequestTool: any;
+//   formatResponseTool: any;
+// }): Promise<Runnable> => {
+//   // Initialize core services and tools
+//   const sdk = new MinimalAudiusSDK(config.audiusApiKey);
+  
+//   // Set up embeddings for vector search
+//   const embeddings = new OpenAIEmbeddings({
+//     openAIApiKey: config.openAIKey,
+//     modelName: "text-embedding-ada-002"
+//   });
+
+//   // Initialize vector store for document retrieval
+//   const vectorStore = await SupabaseVectorStore.fromExistingIndex(
+//     embeddings,
+//     {
+//       client: createClient(config.supabaseUrl, config.supabaseKey),
+//       tableName: "documents",
+//       queryName: "match_documents"
+//     }
+//   );
+
+//   // Configure language model
+//   const llm = new ChatOpenAI({
+//     modelName: config.model ?? "gpt-4-1106-preview",
+//     temperature: config.temperature ?? 0,
+//     streaming: true
+//   });
+
+//   // Initialize web search tool
+//   const tavily = new TavilySearchResults();
+
+//   /**
+//    * Define how state updates are handled for each channel
+//    * Each channel has:
+//    * - value: function to combine previous and next values
+//    * - default: function to provide initial value
+//    */
+//   const channels: StateGraphArgs<AtrisState>["channels"] = {
+//     messages: {
+//       value: (prev, next) => [...(prev || []), ...next],
+//       default: () => []
+//     },
+//     query: {
+//       value: (_, next) => next,
+//       default: () => ""
+//     },
+//     apiResults: {
+//       value: (prev, next) => [...(prev || []), ...next],
+//       default: () => []
+//     },
+//     grading: {
+//       value: (_, next) => next
+//     },
+//     context: {
+//       value: (prev, next) => [...(prev || []), ...next],
+//       default: () => []
+//     }
+//   };
+
+//   // Create and configure the workflow graph
+//   const workflow = new StateGraph<AtrisState>({ channels })
+//     // Add processing nodes
+//     .addNode("api", createApiNode(sdk, llm, config.extractCategoryTool, config.selectApiTool, config.createFetchRequestTool, config.formatResponseTool))
+//     .addNode("rag", createRagNode(vectorStore))
+//     .addNode("grade", createGradeNode(llm))
+//     .addNode("webSearch", createWebSearchNode(llm, tavily))
+//     .addNode("format", createFormatNode(llm))
+
+//     // Configure node connections
+//     .addEdge("api", "grade")  // API results always get graded
+//     .addConditionalEdges(     // Grade determines next step
+//       "grade",
+//       shouldRunRag,
+//       {
+//         rag: "rag",           // Get context from vector store
+//         webSearch: "webSearch", // Search web for more info
+//         format: "format"      // Format final response
+//       }
+//     )
+//     .addEdge("webSearch", "format")  // Web search results go to formatting
+//     .addEdge("rag", "grade");        // RAG results get graded
+
+//   // Compile graph into executable form
+//   return workflow.compile();
+// };
+
+// /**
+//  * Example Usage:
+//  * 
+//  * const graph = await createAtrisGraph({
+//  *   supabaseUrl: process.env.SUPABASE_URL!,
+//  *   supabaseKey: process.env.SUPABASE_KEY!,
+//  *   openAIKey: process.env.OPENAI_API_KEY!,
+//  *   audiusApiKey: process.env.AUDIUS_API_KEY!
+//  * });
+//  *
+//  * // Standard query
+//  * const response = await graph.invoke({
+//  *   query: "What are the most popular songs on Audius?",
+//  *   messages: [],
+//  *   apiResults: [],
+//  *   context: []
+//  * });
+//  *
+//  * // Streaming
+//  * for await (const chunk of graph.stream({
+//  *   query: "Tell me about Audius's API rate limits",
+//  *   messages: [],
+//  *   apiResults: [],
+//  *   context: []
+//  * })) {
+//  *   console.log(chunk);
+//  * }
+//  */

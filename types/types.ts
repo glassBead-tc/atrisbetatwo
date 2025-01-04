@@ -33,7 +33,7 @@ import { SearchFullResponse,
   PlaylistLibrary,
   FullPlaylistResponse,
   FullGetSupporters,
-} from "@audius/sdk/dist/sdk/api/generated/full/models";
+} from "@audius/sdk/dist/sdk/api/generated/full/models/index.js";
 import { SearchKindEnum, SearchAutocompleteKindEnum, SearchSortMethodEnum, SearchRequest, SearchAutocompleteRequest, SearchAutocompleteSortMethodEnum } from '@audius/sdk/dist/sdk/api/generated/full/apis/SearchApi.js';
 import { GetTrendingTracksTimeEnum,
   GetBulkTracksRequest,
@@ -43,11 +43,28 @@ import { GetTrendingTracksTimeEnum,
   GetTrendingUSDCPurchaseTracksTimeEnum,
   GetTrackRemixesRequest,
  } from '@audius/sdk/dist/sdk/api/generated/full/apis/TracksApi.js';
-import { GetTrendingTracksRequest, GetFavoritesRequest } from '@audius/sdk/dist/sdk/api/generated/full/apis';
-import { Messages, END } from '@langchain/langgraph'
-import { MinimalAudiusSDK } from '../services/audius_chat/audiusSdk';
+import { GetTrendingTracksRequest, GetFavoritesRequest } from '@audius/sdk/dist/sdk/api/generated/full/apis/index.js';
+import { Messages, END } from '@langchain/langgraph';
+import { MinimalAudiusSDK } from '../services/audius_chat/audiusSdk.js';
 
-export { SearchFullResponse, 
+export { 
+  SearchKindEnum, 
+  SearchAutocompleteKindEnum, 
+  SearchSortMethodEnum, 
+  SearchAutocompleteSortMethodEnum,
+  GetTrendingTracksTimeEnum,
+  GetTrendingUSDCPurchaseTracksTimeEnum,
+  GetTrendingPlaylistsTimeEnum
+}
+
+export type {
+  GetFavoritesRequest, GetTrendingTracksRequest, SearchFullResponse,
+  FollowersResponse,
+  FollowingResponse,
+  RemixersResponse,
+  GetSupporters,
+  GetTrendingPlaylistsRequest,
+  TrendingPlaylistsResponse,
   RemixablesResponse, 
   RemixingResponse, 
   SearchModel, 
@@ -60,40 +77,17 @@ export { SearchFullResponse,
   PlaylistAddedTimestamp,
   PlaylistArtwork,
   PlaylistLibrary,
-  PlaylistResponse,
   FullPlaylistResponse,
   FullGetSupporters,
-  SearchKindEnum, 
-  SearchAutocompleteKindEnum, 
-  SearchSortMethodEnum, 
-  SearchRequest, 
-  SearchAutocompleteRequest, 
-  SearchAutocompleteSortMethodEnum,
-  GetTrendingTracksTimeEnum,
-  GetBulkTracksRequest,
-  GetFeelingLuckyTracksRequest,
-  GetMostLovedTracksRequest,
-  GetNFTGatedTrackSignaturesRequest,
-  GetTrendingUSDCPurchaseTracksTimeEnum,
-  GetTrackRemixesRequest,
-  GetTrendingTracksRequest,
-  GetFavoritesRequest,
-  FollowersResponse,
-  FollowingResponse,
-  RemixersResponse,
-  GetSupporters,
-  GetTrendingPlaylistsRequest,
-  TrendingPlaylistsResponse,
-  GetTrendingPlaylistsTimeEnum,
   User, 
   Playlist, 
   Track, 
-  FavoritesResponse,
   UsersResponse,
   TracksResponse,
   TrackCommentsResponse,
   StemsResponse,
-  Reposts,
+  FavoritesResponse,
+  PlaylistResponse,
 }
 
 // Define property types first
@@ -191,14 +185,7 @@ export interface GraphState {
   };
 }
 
-export type QueryType =
-  | 'general'
-  | 'trending_tracks'
-  | 'trending_playlists'
-  | 'tracks'
-  | 'users'
-  | 'playlists'
-  | 'genre_info';
+export type QueryType = 'entity' | 'rag' | 'web' | 'bad' | null;
 
 export type EntityType = 'track' | 'user' | 'playlist' | null;
 
