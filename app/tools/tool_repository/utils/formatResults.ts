@@ -1,4 +1,4 @@
-import { apiLogger } from '../../logger';
+import { apiLogger } from '../../../logger';
 
 // Function Declarations
 

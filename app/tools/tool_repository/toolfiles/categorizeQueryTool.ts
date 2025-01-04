@@ -1,6 +1,6 @@
 import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
-import { QueryType, EntityType, ComplexityLevel } from "../../types.js";
+import { QueryType, EntityType, ComplexityLevel } from "../../../../types/types.js";
 
 export class CategorizeQueryTool extends StructuredTool {
   name = "categorize_query";

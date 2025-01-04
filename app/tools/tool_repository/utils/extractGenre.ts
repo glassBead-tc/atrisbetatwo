@@ -1,4 +1,4 @@
-import { GENRE_MAPPINGS, type AudiusGenre } from '../../constants';
+import { GENRE_MAPPINGS, type AudiusGenre } from '../../../../constants/mappings/genreMappings';
 
 interface GenreMatch {
   genre: AudiusGenre;

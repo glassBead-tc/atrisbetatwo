@@ -9,13 +9,7 @@ import {
   FavoritesResponse,
   SearchFullResponse,
   RemixablesResponse,
-  RemixingResponse,
-  GetTrackRemixesRequest,
   RemixesResponse,
-  GetFeelingLuckyTracksRequest,
-  GetMostLovedTracksRequest,
-  GetNFTGatedTrackSignaturesRequest,
-  GetTrendingUSDCPurchaseTracksTimeEnum,
   GetTrendingTracksRequest,
 } from '../../../../types/types.js';
 

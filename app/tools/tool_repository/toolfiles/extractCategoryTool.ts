@@ -1,13 +1,11 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { QueryType, EntityType, ComplexityLevel } from "../../../../types/types";
+import { QueryType, EntityType } from "../../../../types/types";
 
 export const extractCategoryTool = tool(
   async (input: { query: string }): Promise<{
     queryType: QueryType,
     entityType: EntityType | null,
-    isEntityQuery: boolean,
-    complexity: ComplexityLevel,
     categories: string[]
   }> => {
     console.log("\n=== Extract Category Tool Input ===");
@@ -44,13 +42,10 @@ export const extractCategoryTool = tool(
     }
 
     // Complexity analysis
-    const complexity = analyzeComplexity(normalizedQuery);
 
     return {
       queryType,
       entityType,
-      isEntityQuery: entityType !== null,
-      complexity,
       categories
     };
   },
@@ -82,11 +77,11 @@ function detectEntityType(query: string): EntityType | null {
 // "Moderate" = Query requires multiple API calls to answer, or a more complex calculation based on multiple API call response bodies.
 // "Complex" = Query requires a series of complex queries to answer, or a highly complex calculation based on multiple API call response bodies.
 //            We will not attempt to answer complex queries right now.
-function analyzeComplexity(query: string): ComplexityLevel {
-  const words = query.split(' ').length;
-  const conditions = query.split('and').length + query.split('or').length - 1;
+// function analyzeComplexity(query: string): ComplexityLevel {
+//   const words = query.split(' ').length;
+//   const conditions = query.split('and').length + query.split('or').length - 1;
   
-  if (words > 10 || conditions > 2) return 'complex';
-  if (words > 5 || conditions > 1) return 'moderate';
-  return 'simple';
-}
+//   if (words > 10 || conditions > 2) return 'complex';
+//   if (words > 5 || conditions > 1) return 'moderate';
+//   return 'simple';
+// }

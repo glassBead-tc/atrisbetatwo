@@ -1,4 +1,4 @@
-import { apiLogger } from "../../../logger.js";
+import { apiLogger } from "../../../../logger.js";
 
 /**
  * Extracts parameters for playlist queries.

@@ -1,4 +1,4 @@
-import { DatasetSchema } from '../../types';
+import { DatasetSchema } from '../../../../types/types';
 
 interface KeywordPattern {
   pattern: RegExp;

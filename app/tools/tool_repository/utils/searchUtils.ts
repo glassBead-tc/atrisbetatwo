@@ -1,4 +1,4 @@
-import { apiLogger } from '../../logger';
+import { apiLogger } from '../../../logger';
 
 export function parseQuery(query: string): { type: string, title: string | null, artist: string | null, limit?: number | null } {
   apiLogger.debug(`Parsing query: "${query}"`);

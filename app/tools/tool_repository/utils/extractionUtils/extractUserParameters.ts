@@ -1,4 +1,4 @@
-import { apiLogger } from '../../../logger';
+import { apiLogger } from '../../../../logger';
 
 /**
  * Extracts parameters for user queries.
