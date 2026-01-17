@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write \"app\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "mcp:audius": "npx ts-node mcp-servers/audius/index.ts",
+    "mcp:build": "tsc -p mcp-servers/tsconfig.json"
   },
   "engines": {
     "node": ">=18"
