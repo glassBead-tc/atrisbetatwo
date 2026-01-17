@@ -1,56 +1,36 @@
-import { getAudiusSdk } from '../../../services/audius_chat/audiusSdk.js';
+import { getAudiusClient } from '../../../lib/audius.js';
 import { tool } from "@langchain/core/tools";
-import { z } from "zod"
-import { GraphState, 
-  DatasetSchema, 
-  ComplexityLevel, 
-  EntityType, 
+import { z } from "zod";
+import {
+  DatasetSchema,
+  ComplexityLevel,
+  EntityType,
   AudiusCorpus,
-  SearchFullResponse,
-  GetFavoritesRequest,
   ApiEndpoint,
 } from "../../../types/types.js";
 import fs from "fs";
 import { TRIMMED_CORPUS_PATH, BASE_URL } from "../../../constants/constants.js";
 import { END } from "@langchain/langgraph";
-import type { 
-  TracksResponse, 
-  GetTrendingTracksTimeEnum,
-  UsersResponse,
-  TrackResponse,
-  UserResponse,
-  PlaylistResponse,
-  TrackCommentsResponse,
-  StemsResponse,
-  FavoritesResponse,
-  TrendingPlaylistsResponse,
-} from '@audius/sdk';
 import { ChatOpenAI } from "@langchain/openai";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-import { TrackSDKMethods } from "../../../services/audius_chat/entity_methods/tracks/trackSDKMethods.js";
-import { UserSDKMethods } from "../../../services/audius_chat/entity_methods/users/userSDKMethods.js";
-import { PlaylistSDKMethods } from "../../../services/audius_chat/entity_methods/playlists/playlistSDKMethods.js";
 import { analyzeQuery } from './utils/queryAnalysis.js';
 import dotenv from 'dotenv';
 import { calculateArtistPopularity } from './utils/calculateArtistPopularity.js';
 import { calculateGenrePopularity } from './utils/calculateGenrePopularity.js';
 import { extractGenreFromQuery } from './utils/extractGenre.js';
+import type { AtrisState } from "../../../types/state.js";
 
-// Add at the top with other type imports
+// Type definitions
 type ApiCategory = 'Tracks' | 'Playlists' | 'Users';
-type ApiResponse = 
-  | TracksResponse 
-  | UsersResponse 
-  | TrackResponse 
-  | UserResponse 
-  | PlaylistResponse
-  | TrackCommentsResponse
-  | StemsResponse
-  | FavoritesResponse
-  | TrackCommentsResponse
-  | TrendingPlaylistsResponse
-  | GetFavoritesRequest
-  | SearchFullResponse;
+
+// Time period for trending queries (matches Audius SDK)
+type TrendingTimeRange = "week" | "month" | "year" | "allTime";
+
+// Simplified API response type for the modernized SDK
+interface ApiResponse {
+  data: any[];
+  [key: string]: any;
+}
 
 // Update the EXTRACT_HIGH_LEVEL_CATEGORIES mapping with proper typing
 const EXTRACT_HIGH_LEVEL_CATEGORIES: Record<string, ApiCategory> = {
@@ -364,20 +344,17 @@ function getAvailableEndpoints(queryType: QueryType, needsCustomCalc: boolean): 
  * Tool to create and execute API fetch requests.
  */
 export const createFetchRequestTool = tool(
-  async (input: { 
+  async (input: {
     parameters: Record<string, any>;
     bestApi: { api_name: string };
   }): Promise<{ response: ApiResponse }> => {
     try {
-      const sdk = await getAudiusSdk();
       const response = await executeSDKMethod(input.bestApi.api_name, input.parameters);
       return { response };
     } catch (error) {
-      console.error("SDK request failed:", error)
+      console.error("SDK request failed:", error);
       return {
-        response: {
-          data: []
-        } as TracksResponse
+        response: { data: [] }
       };
     }
   },
@@ -393,12 +370,9 @@ export const createFetchRequestTool = tool(
   }
 );
 
-// Helper function to map API names to SDK methods
+// Helper function to map API names to SDK methods using native @audius/sdk
 async function executeSDKMethod(apiName: string, parameters: Record<string, any>): Promise<ApiResponse> {
-  const sdk = await getAudiusSdk();
-  const trackMethods = new TrackSDKMethods(BASE_URL, process.env.AUDIUS_API_KEY!);
-  const userMethods = new UserSDKMethods(BASE_URL, process.env.AUDIUS_API_KEY!);
-  const playlistMethods = new PlaylistSDKMethods(BASE_URL, process.env.AUDIUS_API_KEY!);
+  const client = await getAudiusClient();
 
   console.log('Executing SDK method for:', apiName);
   console.log('With parameters:', parameters);
@@ -406,9 +380,8 @@ async function executeSDKMethod(apiName: string, parameters: Record<string, any>
   try {
     // Handle custom calculation cases
     if (apiName === 'Calculate Trending Artists') {
-      const recentTracks = await trackMethods.getTrendingTracks({
-        time: 'month',
-        limit: 100
+      const recentTracks = await client.tracks.getTrendingTracks({
+        time: 'month'
       });
 
       if (!recentTracks.data) {
@@ -417,7 +390,6 @@ async function executeSDKMethod(apiName: string, parameters: Record<string, any>
 
       const artistRankings = await calculateArtistPopularity(recentTracks.data);
 
-      // Just return the rankings directly with a data property to match ApiResponse shape
       return {
         data: artistRankings.map(artist => ({
           name: artist.name,
@@ -427,13 +399,12 @@ async function executeSDKMethod(apiName: string, parameters: Record<string, any>
           points: artist.points,
           topTrack: artist.topTrack
         }))
-      } as unknown as ApiResponse;
+      };
     }
 
     if (apiName === 'Calculate Genre Popularity') {
-      const recentTracks = await trackMethods.getTrendingTracks({
-        time: 'month',
-        limit: 100
+      const recentTracks = await client.tracks.getTrendingTracks({
+        time: 'month'
       });
 
       if (!recentTracks.data) {
@@ -442,7 +413,6 @@ async function executeSDKMethod(apiName: string, parameters: Record<string, any>
 
       const genreRankings = await calculateGenrePopularity(recentTracks.data);
 
-      // Return with all required ApiResponse fields
       return {
         data: genreRankings.map(genre => ({
           name: genre.name,
@@ -451,36 +421,52 @@ async function executeSDKMethod(apiName: string, parameters: Record<string, any>
           totalFavorites: genre.totalFavorites,
           points: genre.points,
           topTrack: genre.topTrack
-        })),
-        latest_chain_block: 0,
-        latest_chain_slot_plays: 0,
-        latest_indexed_block: 0,
-        latest_indexed_slot_plays: 0,
-        signature: '',
-        timestamp: Date.now(),
-        version: '1.0.0'
-      } as unknown as ApiResponse;  // Double type assertion to handle custom fields
+        }))
+      };
     }
 
-    // Handle standard API calls
+    // Handle standard API calls using native SDK methods
     switch(apiName) {
-      case 'Get Trending Tracks':
+      case 'Get Trending Tracks': {
         const genre = extractGenreFromQuery(parameters.query);
-        if (genre) {
-          return await trackMethods.getTrendingTracks({
-            ...parameters,
-            genre
-          });
-        }
-        // Default case - no genre filter
-        return await trackMethods.getTrendingTracks(parameters);
-      case 'Get Trending Playlists':
-        return await playlistMethods.getTrendingPlaylists(parameters);
-      case 'Search Users':
-        return await userMethods.searchUsers(parameters.query);
-      // ... other cases ...
+        const result = await client.tracks.getTrendingTracks({
+          time: parameters.time || 'week',
+          genre: genre || undefined
+        });
+        return { data: result.data || [] };
+      }
+
+      case 'Get Trending Playlists': {
+        const result = await client.playlists.getTrendingPlaylists({
+          time: parameters.time || 'week'
+        });
+        return { data: result.data || [] };
+      }
+
+      case 'Search Tracks': {
+        const result = await client.tracks.searchTracks({
+          query: parameters.query
+        });
+        return { data: result.data || [] };
+      }
+
+      case 'Search Users': {
+        const result = await client.users.searchUsers({
+          query: parameters.query
+        });
+        return { data: result.data || [] };
+      }
+
+      case 'Search Playlists': {
+        const result = await client.playlists.searchPlaylists({
+          query: parameters.query
+        });
+        return { data: result.data || [] };
+      }
+
       default:
-        return { data: [] } as ApiResponse;
+        console.warn(`Unknown API method: ${apiName}`);
+        return { data: [] };
     }
   } catch (error) {
     console.error(`SDK request failed for ${apiName}:`, error);
@@ -489,40 +475,23 @@ async function executeSDKMethod(apiName: string, parameters: Record<string, any>
 }
   
 export const resetState = tool(
-  async (input: Record<string, any>): Promise<Partial<GraphState>> => {
+  async (_input: Record<string, any>): Promise<Partial<AtrisState>> => {
     return {
-      query: null,
+      query: "",
       queryType: null,
-      categories: null,
-      apis: null,
-      bestApi: null,
-      parameters: null,
-      response: null,
-      complexity: null,
-      isEntityQuery: null,
-      entityName: null,
       entityType: null,
+      categories: [],
+      apiResult: null,
+      context: "",
+      formattedResponse: "",
       error: null,
-      secondaryApi: null,
-      secondaryResponse: null,
-      formattedResponse: null,
-      messages: null,
-      initialized: false,
-      sdkInitialized: false,
-      sdkConfig: {
-        apiKey: apiKey!,
-        baseUrl: baseUrl!,
-        initialized: false
-      }
+      shouldRetry: false,
     };
   },
   {
     name: "reset_state",
     description: "Resets query-specific state properties while maintaining persistent ones",
-    schema: z.object({
-      llm: z.any().optional(),
-      selectedHost: z.string().optional()
-    }).strict()
+    schema: z.object({}).strict()
   }
 );
 
@@ -535,7 +504,7 @@ export const extractParametersTool = tool(
     parameters: {
       entityName: string | null;
       query: string;
-      time?: GetTrendingTracksTimeEnum;
+      time?: TrendingTimeRange;
       genre?: string;
       limit?: number;
     }
@@ -543,7 +512,7 @@ export const extractParametersTool = tool(
     const parameters: {
       entityName: string | null;
       query: string;
-      time?: GetTrendingTracksTimeEnum;
+      time?: TrendingTimeRange;
       genre?: string;
       limit?: number;
     } = {
@@ -612,23 +581,26 @@ export const extractParametersTool = tool(
   }
 );
 
-// Add after the type definitions
-export function verifyParams(input: GraphState): Promise<"execute_request_node" | typeof END> {
+// Verify required parameters before API execution
+export function verifyParams(input: {
+  bestApi?: { required_parameters?: Array<{ name: string }> };
+  parameters?: Record<string, any>;
+}): Promise<"execute_request_node" | typeof END> {
   const { bestApi, parameters } = input;
-  
+
   if (!bestApi?.required_parameters) {
     throw new Error("No API selected");
   }
 
-  const required = bestApi.required_parameters.map((p: { name: string }) => p.name);
-  
+  const required = bestApi.required_parameters.map((p) => p.name);
+
   // If no required parameters, proceed
   if (required.length === 0) {
     return Promise.resolve("execute_request_node");
   }
 
   // Check required parameters
-  const missing = required.filter((p: string) => !parameters?.[p]);
+  const missing = required.filter((p) => !parameters?.[p]);
   if (missing.length > 0) {
     throw new Error(`Missing required parameters: ${missing.join(", ")}`);
   }
@@ -636,15 +608,14 @@ export function verifyParams(input: GraphState): Promise<"execute_request_node" 
   return Promise.resolve("execute_request_node");
 }
 
-// Replace selectHostTool with SDK initialization check
+// Initialize the Audius SDK client
 export const initSdkTool = tool(
   async (): Promise<{ initialized: boolean }> => {
     try {
-      const sdk = await getAudiusSdk();
-      if (!sdk) {
-        throw new Error("SDK not initialized");
+      const client = await getAudiusClient();
+      if (!client) {
+        throw new Error("SDK client not initialized");
       }
-      // Only return initialized flag - the SDK is managed by sdkClient.ts
       return { initialized: true };
     } catch (error) {
       console.error("SDK initialization failed:", error);
